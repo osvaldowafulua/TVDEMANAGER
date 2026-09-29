@@ -181,6 +181,68 @@ const initialInvoices = owners.slice(0, 3).map((o, i) => ({
   status: ['Pendente', 'Paga', 'Pendente'][i],
 }));
 
+/* =========================================================
+   NAVEGAÇÃO E METADADOS
+========================================================= */
+
+const menu = [
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'owners', label: 'Proprietários', icon: UserRound },
+  { id: 'vehicles', label: 'Viaturas', icon: Car },
+  { id: 'vehicle-library', label: 'Biblioteca de imagens', icon: Images },
+  { id: 'drivers', label: 'Motoristas', icon: Users },
+  { id: 'contracts', label: 'Contratos', icon: FileText },
+  { id: 'operation', label: 'Operação', icon: Activity },
+  { id: 'payments', label: 'Pagamentos', icon: CreditCard },
+  { id: 'documents', label: 'Documentos', icon: FolderOpen },
+  { id: 'crm', label: 'CRM', icon: UserPlus },
+  { id: 'retakes', label: 'Retomas', icon: RefreshCcw },
+  { id: 'billing', label: 'Facturação', icon: Receipt },
+  { id: 'team', label: 'Equipa', icon: UsersThree },
+  { id: 'email-templates', label: 'Modelos de email', icon: EnvelopeSimple },
+  { id: 'reports', label: 'Relatórios', icon: BarChart3 },
+  { id: 'settings', label: 'Definições', icon: Settings },
+];
+
+// [chave em db, título, acção de criar, acção de guardar]
+const entityMeta = {
+  owner: ['owners', 'Proprietários', 'Novo proprietário', 'Guardar proprietário'],
+  vehicle: ['vehicles', 'Viaturas', 'Nova viatura', 'Guardar viatura'],
+  driver: ['drivers', 'Motoristas', 'Novo motorista', 'Guardar motorista'],
+  contract: ['contracts', 'Contratos', 'Novo contrato', 'Gerar contrato'],
+  payment: ['payments', 'Pagamentos', 'Novo pagamento', 'Guardar pagamento'],
+  document: ['documents', 'Documentos', 'Carregar documento', 'Guardar documento'],
+  crm: ['crmLeads', 'CRM', 'Nova lead', 'Guardar lead'],
+  retake: ['retakes', 'Retomas', 'Nova retoma', 'Guardar retoma'],
+  invoice: ['invoices', 'Facturas', 'Nova factura', 'Guardar factura'],
+};
+
+/* =========================================================
+   UTILITÁRIOS
+========================================================= */
+
+const moneyFormat = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
+const money = value => moneyFormat.format(Number(value) || 0);
+const round = value => Math.round((Number(value) || 0) * 100) / 100;
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+const formatDate = iso => { if (!iso) return ''; const [y, m, d] = String(iso).split('-'); return d ? `${d}/${m}/${y}` : String(iso); };
+const invoiceTotals = (items = []) => {
+  const subtotal = items.reduce((s, item) => s + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0), 0);
+  const vat = items.reduce((s, item) => s + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0) * (Number(item.vatRate) || 0) / 100, 0);
+  return { subtotal: round(subtotal), vat: round(vat), total: round(subtotal + vat) };
+};
+const nextSequence = (values, prefix) => values.reduce((max, value) => String(value || '').startsWith(prefix) ? Math.max(max, parseInt(String(value).slice(prefix.length), 10) || 0) : max, 0) + 1;
+const generateInvoiceNumber = (invoices = []) => { const prefix = `FT ${today().slice(0, 4)}/`; return prefix + String(nextSequence(invoices.map(i => i.number), prefix)).padStart(6, '0'); };
+const generateContractNumber = (contracts = []) => { const prefix = `CTR-${today().slice(0, 4)}-`; return prefix + String(nextSequence(contracts.map(c => c.id), prefix)).padStart(3, '0'); };
+const validDocumentFile = file => ['application/pdf', 'image/jpeg', 'image/png'].includes(file?.type) && file.size <= 10 * 1024 * 1024;
+const printGeneratedDocument = () => {
+  const clear = () => { delete document.body.dataset.printTarget; window.removeEventListener('afterprint', clear); };
+  document.body.dataset.printTarget = 'document';
+  window.addEventListener('afterprint', clear);
+  window.print();
+};
+function StatusBadge({ type = 'default', children }) { return <span className={`status-badge ${type}`}>{children}</span>; }
+
 const f = (key,label,type='text',required=false,options=null) => ({key,label,type,required,options});
 function fieldsFor(kind, db) {
  const owner = f('owner','Proprietário','select',true,db.owners.map(o=>o.name));
@@ -944,7 +1006,7 @@ function Reports({actions}) {
    DEFINIÇÕES
 ========================================================= */
 
-function SettingsPage({ emailSettings }) {
+function SettingsPage({ emailSettings, showToast }) {
   return (
     <div className="page">
       <PageHeader
@@ -977,7 +1039,7 @@ function SettingsPage({ emailSettings }) {
 
       {emailSettings && (
         <div className="settings-card">
-          <EmailSettings onClose={()=>setModal({open:false,type:null,data:null})} showToast={showToast} />
+          <EmailSettings onClose={()=>{}} showToast={showToast} />
         </div>
       )}
     </div>
@@ -1114,7 +1176,7 @@ export default function App() {
         return <Reports actions={actions} />;
 
       case "settings":
-        return <SettingsPage emailSettings={()=>openModal('email-settings')} />;
+        return <SettingsPage emailSettings={()=>openModal('email-settings')} showToast={showToast} />;
 
       default:
         return <Dashboard actions={actions} />;
