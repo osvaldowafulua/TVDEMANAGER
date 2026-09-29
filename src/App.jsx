@@ -1006,7 +1006,7 @@ function Reports({actions}) {
    DEFINIÇÕES
 ========================================================= */
 
-function SettingsPage({ emailSettings, showToast }) {
+function SettingsPage({ onOpenEmailSettings }) {
   return (
     <div className="page">
       <PageHeader
@@ -1035,13 +1035,14 @@ function SettingsPage({ emailSettings, showToast }) {
           <p>Alertas e notificações automáticas.</p>
           <span className="settings-availability">Disponível com integração</span>
         </div>
-      </div>
 
-      {emailSettings && (
         <div className="settings-card">
-          <EmailSettings onClose={()=>{}} showToast={showToast} />
+          <EnvelopeSimple size={22} />
+          <h3>Email</h3>
+          <p>Servidor SMTP e envio de email de teste.</p>
+          <button type="button" className="btn btn-secondary" onClick={onOpenEmailSettings}>Configurar email</button>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -1170,13 +1171,13 @@ export default function App() {
         return <EmailTemplatesPage templates={emailTemplates} profile={profile} onEdit={template=>openModal('template-edit',template)} showToast={showToast}/>;
 
       case "email-settings":
-        return <EmailSettings onClose={()=>setModal({open:false,type:null,data:null})} showToast={showToast} />;
+        return <EmailSettings onClose={()=>setActivePage('settings')} showToast={showToast} />;
 
       case "reports":
         return <Reports actions={actions} />;
 
       case "settings":
-        return <SettingsPage emailSettings={()=>openModal('email-settings')} showToast={showToast} />;
+        return <SettingsPage onOpenEmailSettings={()=>setActivePage('email-settings')} />;
 
       default:
         return <Dashboard actions={actions} />;
@@ -1230,7 +1231,7 @@ export default function App() {
 
           <button
             key="email-settings"
-            className={`nav-item ${activePage === "email-settings" ? "active" : ""}`} aria-current="page"
+            className={`nav-item ${activePage === "email-settings" ? "active" : ""}`} aria-current={activePage === "email-settings" ? "page" : undefined}
             onClick={() => {
               setActivePage("email-settings");
               setMobileMenu(false);

@@ -87,9 +87,9 @@
   .status-badge, .status-badge.success, .status-badge.warning, .status-badge.info, .status-badge.default, .status-badge.neutral { background: #353535; color: #e3e3e3; border: 1px solid #626262; }
   .status-badge::before { background: #d4d4d4; }
   .status-badge.danger { background: #43262b; color: #f3a5ae; border-color: #885057; }
-  .vehicle-card-image { background: #181818; border-color: #3a3a3a; color: #c9c9c9; }
+  .vehicle-card-image { background: #181818; border-color: #3a3a3a; color: #c9c9c9; overflow: hidden; }
   .vehicle-card-image .status-badge { z-index: 1; }
-  .vehicle-card-image > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .vehicle-card-image > img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
   .vehicle-card-image > .vehicle-image-placeholder { display: grid; place-items: center; width: 100%; height: 100%; }
   .vehicle-alert { background: #303030; color: #ddd; border-color: #515151; }
   .modal-overlay { background: rgba(0,0,0,.72); backdrop-filter: blur(8px); }

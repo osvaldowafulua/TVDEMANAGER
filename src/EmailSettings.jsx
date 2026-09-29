@@ -1,20 +1,34 @@
-import { useState, useRef } from 'react';
-import { EnvelopeSimple, Gear, X, Check } from '@phosphor-icons/react';
+import { useState } from 'react';
+import { EnvelopeSimple, Gear, X, Check, Warning } from '@phosphor-icons/react';
 
 const API_URL = '/api/send-email';
+const STORAGE_KEY = 'smtpConfig';
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Preferências guardadas neste browser. A password nunca é guardada; versões antigas guardavam-na, por isso é removida aqui.
+function loadSavedConfig() {
+  const defaults = { smtpHost: '', smtpPort: '587', smtpUser: '', smtpFrom: 'noreply@tvdefleet.pt' };
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    if ('smtpPass' in saved) {
+      delete saved.smtpPass;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+    }
+    return {
+      smtpHost: saved.smtpHost || defaults.smtpHost,
+      smtpPort: saved.smtpPort || defaults.smtpPort,
+      smtpUser: saved.smtpUser || defaults.smtpUser,
+      smtpFrom: saved.smtpFrom || defaults.smtpFrom,
+    };
+  } catch {
+    return defaults;
+  }
+}
 
 export function EmailSettings({ onClose, showToast }) {
-  const [form, setForm] = useState(() => ({
-    smtpHost: '',
-    smtpPort: '587',
-    smtpUser: '',
-    smtpPass: '',
-    smtpFrom: 'noreply@tvdefleet.pt',
-    testEmail: '',
-  }));
+  const [form, setForm] = useState(() => ({ ...loadSavedConfig(), smtpPass: '', testEmail: '' }));
   const [status, setStatus] = useState({ connected: false, error: null });
   const [sending, setSending] = useState(false);
-  const formRef = useRef(null);
 
   const callEmailAPI = async (payload) => {
     const response = await fetch(API_URL, {
@@ -30,6 +44,10 @@ export function EmailSettings({ onClose, showToast }) {
   };
 
   const connect = async () => {
+    if (!EMAIL_PATTERN.test(form.smtpUser)) {
+      showToast('Introduza o utilizador SMTP (email) para receber o email de teste de conexão.', 'warning');
+      return;
+    }
     setSending(true);
     setStatus({ connected: false, error: null });
     try {
@@ -49,7 +67,7 @@ export function EmailSettings({ onClose, showToast }) {
   };
 
   const sendTest = async () => {
-    if (!form.testEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.testEmail)) {
+    if (!EMAIL_PATTERN.test(form.testEmail)) {
       showToast('Introduza um email válido para teste.', 'warning');
       return;
     }
@@ -69,22 +87,20 @@ export function EmailSettings({ onClose, showToast }) {
     setSending(false);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     const config = {
       smtpHost: form.smtpHost,
       smtpPort: form.smtpPort,
       smtpUser: form.smtpUser,
-      smtpPass: form.smtpPass,
       smtpFrom: form.smtpFrom,
     };
-    localStorage.setItem('smtpConfig', JSON.stringify(config));
-    setForm({
-      smtpHost: config.smtpHost,
-      smtpPort: config.smtpPort,
-      smtpUser: config.smtpUser,
-      smtpPass: '',
-      smtpFrom: config.smtpFrom,
-    });
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    } catch {
+      showToast('Não foi possível guardar as preferências neste browser.', 'warning');
+      return;
+    }
+    setForm(v => ({ ...v, smtpPass: '' }));
     showToast('Configurações de email guardadas localmente. Configure as variáveis de ambiente no servidor para activar o envio.', 'info');
     onClose();
   };
@@ -105,7 +121,7 @@ export function EmailSettings({ onClose, showToast }) {
             <h2>Servidor SMTP</h2>
           </div>
 
-          <form ref={formRef} className="workspace-form" onSubmit={e => e.preventDefault()}>
+          <form className="workspace-form" onSubmit={e => e.preventDefault()}>
             <div className="form-grid">
               <div>
                 <label>Host SMTP <span>*</span></label>
@@ -168,9 +184,9 @@ export function EmailSettings({ onClose, showToast }) {
             </div>
           </form>
 
-          <div className="mt-6">
+          <div className="email-settings-block">
             <button
-              className="btn btn-primary w-full"
+              className="btn btn-primary btn-block"
               onClick={connect}
               disabled={sending}
             >
@@ -179,23 +195,24 @@ export function EmailSettings({ onClose, showToast }) {
           </div>
 
           {status.connected && (
-            <div className="mt-4 p-3 bg-green-50 rounded-lg text-green-800">
-              <span className="icon-check size-4" />
+            <div className="email-settings-status success" role="status">
+              <Check size={16} aria-hidden="true" />
               <span>Servidor SMTP conectado com sucesso</span>
             </div>
           )}
 
           {status.error && (
-            <div className="mt-4 p-3 bg-red-50 rounded-lg text-red-800">
-              <span className="icon-alert size-4" />
+            <div className="email-settings-status error" role="alert">
+              <Warning size={16} aria-hidden="true" />
               <span>{status.error}</span>
             </div>
           )}
 
-          <p className="mt-4 text-xs text-muted-2">
+          <p className="email-settings-note">
             Nota: As credenciais SMTP devem ser configuradas nas variáveis de ambiente do servidor
             (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM).
-            Este formulário apenas testa a conectividade e guarda preferências locais.
+            O teste de conexão usa essa configuração do servidor e envia um email para o utilizador SMTP indicado.
+            Este formulário guarda apenas preferências locais neste browser (nunca a password).
           </p>
         </div>
 
@@ -205,20 +222,20 @@ export function EmailSettings({ onClose, showToast }) {
             <h2>Enviar email de teste</h2>
           </div>
 
-          <p className="text-sm text-muted-2 mb-4">
+          <p>
             Quer testar se o email está a funcionar corretamente?
           </p>
 
-          <form onSubmit={e => e.preventDefault()}>
+          <form className="email-settings-test" onSubmit={e => e.preventDefault()}>
             <input
-              className="form-input w-full mb-3"
+              className="form-input"
               type="email"
               placeholder="Seu email para teste"
               value={form.testEmail}
               onChange={e => setForm(v => ({ ...v, testEmail: e.target.value }))}
             />
             <button
-              className="btn btn-primary w-full"
+              className="btn btn-primary btn-block"
               onClick={sendTest}
               disabled={sending}
             >
@@ -228,14 +245,15 @@ export function EmailSettings({ onClose, showToast }) {
         </div>
       </div>
 
-      <div className="mt-8">
+      <div className="email-settings-actions">
         <button
+          type="button"
           className="btn btn-secondary"
           onClick={onClose}
         >
           <X size={17} /> Cancelar
         </button>
-        <button className="btn btn-primary" type="submit" form={formRef} onClick={handleSave}>
+        <button type="button" className="btn btn-primary" onClick={handleSave}>
           <Check size={17} /> Guardar configurações
         </button>
       </div>

@@ -3010,3 +3010,14 @@ body[data-print-target="document"] .document-preview-signatures {
   body[data-print-target="document"] .file-preview-stage,
   body[data-print-target="document"] .attached-preview { display: none !important; }
 }
+
+/* Definições de email */
+.btn-block { width: 100%; }
+.email-settings-block { margin-top: 20px; }
+.email-settings-test { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.email-settings-status { display: flex; align-items: flex-start; gap: 8px; margin-top: 16px; padding: 12px 14px; border: 1px solid; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.email-settings-status > svg { flex-shrink: 0; margin-top: 2px; }
+.email-settings-status.success { color: #83ddb5; background: #162c24; border-color: #2b4a3d; }
+.email-settings-status.error { color: #f6a1aa; background: #361f28; border-color: #63313d; }
+.email-settings-note { margin-top: 16px; font-size: 12px; line-height: 1.6; }
+.email-settings-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; margin-top: 24px; }
