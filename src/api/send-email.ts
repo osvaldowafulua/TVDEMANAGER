@@ -84,6 +84,10 @@ export async function handleSendEmail(request: Request): Promise<Response> {
     'http://localhost:5173',
     'http://localhost:4173',
     process.env.APP_URL,
+    // Domínios atribuídos automaticamente pelo Vercel (produção, branch e deployment).
+    ...[process.env.VERCEL_PROJECT_PRODUCTION_URL, process.env.VERCEL_BRANCH_URL, process.env.VERCEL_URL]
+      .filter(Boolean)
+      .map(host => `https://${host}`),
   ].filter(Boolean);
 
   if (origin && !allowedOrigins.includes(origin)) {
