@@ -30,10 +30,21 @@ function authReducer(state, action) {
   }
 }
 
-const DEMO_USERS = {
-  'owner@demo.pt': { role: 'owner', name: 'Rui Alexandre Santos', nif: '123456789', phone: '+351 910 000 001' },
-  'driver@demo.pt': { role: 'driver', name: 'Diogo Nunes Ferreira', nif: '456789123', phone: '+351 910 000 003' },
+// Contas de demonstração: qualquer password é aceite. O email identifica o perfil na sessão local.
+export const DEMO_USERS = {
+  'admin@demo.pt': { role: 'admin', name: 'Administrador', email: 'admin@demo.pt' },
+  'owner@demo.pt': { role: 'owner', name: 'Rui Alexandre Santos', email: 'owner@demo.pt', nif: '123456789', phone: '+351 910 000 001' },
+  'driver@demo.pt': { role: 'driver', name: 'Diogo Nunes Ferreira', email: 'driver@demo.pt', nif: '456789123', phone: '+351 910 000 003' },
 };
+
+// Página inicial de cada perfil depois de entrar.
+export const homeFor = role => (role === 'admin' ? '/admin' : '/user/vehicles');
+
+// Depois de entrar, volta à página pedida antes do login só se pertencer à área do perfil.
+export function destinationFor(role, from) {
+  const area = role === 'admin' ? '/admin' : '/user';
+  return from?.startsWith(area) ? from : homeFor(role);
+}
 
 export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
@@ -57,9 +68,9 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (email, role) => {
     await new Promise(r => setTimeout(r, 500));
     
-    const demoUser = DEMO_USERS[email];
+    const demoUser = DEMO_USERS[String(email).trim().toLowerCase()];
     if (!demoUser || demoUser.role !== role) {
-      throw new Error('Credenciais inválidas ou role incorreto');
+      throw new Error('Email ou tipo de utilizador incorrecto. Use uma das contas de demonstração indicadas abaixo.');
     }
 
     const userData = { user: demoUser, role, isAuthenticated: true };
@@ -75,10 +86,9 @@ export function AuthProvider({ children }) {
 
   const updateUser = useCallback((updates) => {
     const newUser = { ...state.user, ...updates };
-    const stored = { ...state, user: newUser };
-    localStorage.setItem('tvde_auth', JSON.stringify(stored));
+    localStorage.setItem('tvde_auth', JSON.stringify({ user: newUser, role: state.role, isAuthenticated: true }));
     dispatch({ type: 'UPDATE_USER', payload: updates });
-  }, [state.user]);
+  }, [state.user, state.role]);
 
   const value = {
     ...state,

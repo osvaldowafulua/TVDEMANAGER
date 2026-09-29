@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { UserCircle, CaretDown, CaretUp, Pencil, UsersThree, EnvelopeSimple, Plus, Trash, Copy, Check } from '@phosphor-icons/react';
+import { UserCircle, CaretDown, CaretUp, Pencil, UsersThree, EnvelopeSimple, Plus, Trash, Copy, Check, SignOut } from '@phosphor-icons/react';
 
 const ROLE_DETAILS = {
   Administrador: 'Gestão integral do espaço de trabalho.',
@@ -17,7 +17,7 @@ function Avatar({ profile, size = 19 }) {
   return profile.avatar ? <img src={profile.avatar} alt="" className="profile-avatar-image" /> : <UserCircle size={size} aria-hidden="true" />;
 }
 
-export function ProfileMenu({ profile, placement = 'down', compact = false, onEdit, onTeam, onTemplates }) {
+export function ProfileMenu({ profile, placement = 'down', compact = false, onEdit, onTeam, onTemplates, onLogout }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
   useEffect(() => {
@@ -40,6 +40,7 @@ export function ProfileMenu({ profile, placement = 'down', compact = false, onEd
       <button role="menuitem" onClick={() => choose(onEdit)}><Pencil size={16} />Editar perfil</button>
       <button role="menuitem" onClick={() => choose(onTeam)}><UsersThree size={16} />Equipa e papéis</button>
       <button role="menuitem" onClick={() => choose(onTemplates)}><EnvelopeSimple size={16} />Modelos de email</button>
+      {onLogout && <button role="menuitem" onClick={() => choose(onLogout)}><SignOut size={16} />Terminar sessão</button>}
     </div>}
   </div>;
 }

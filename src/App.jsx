@@ -6,180 +6,9 @@ import { EmailSettings } from "./EmailSettings.jsx";
 
 import "./style.css";
 import "./mono.css";
-
-/* =========================================================
-   DADOS DEMO (SINTÉTICOS — NÃO SÃO DADOS REAIS)
-========================================================= */
-
-const owners = [
-  {
-    id: 1,
-    name: 'Rui Alexandre Santos',
-    nif: '123456789',
-    phone: '+351 910 000 001',
-    email: 'rui.santos@demo.pt',
-    vehicles: 2,
-    status: 'Ativo',
-    iban: 'PT50 0000 0000 0000 0000 0000 1',
-  },
-  {
-    id: 2,
-    name: 'Catarina Marques',
-    nif: '987654321',
-    phone: '+351 910 000 002',
-    email: 'catarina.marques@demo.pt',
-    vehicles: 1,
-    status: 'Ativo',
-    iban: 'PT50 0000 0000 0000 0000 0000 2',
-  },
-  {
-    id: 3,
-    name: 'Diogo Nunes Ferreira',
-    nif: '456789123',
-    phone: '+351 910 000 003',
-    email: 'diogo.ferreira@demo.pt',
-    vehicles: 1,
-    status: 'Pendente',
-    iban: 'PT50 0000 0000 0000 0000 0000 3',
-  },
-  {
-    id: 4,
-    name: 'Sofia Ribeiro Lopes',
-    nif: '789123456',
-    phone: '+351 910 000 004',
-    email: 'sofia.lopes@demo.pt',
-    vehicles: 2,
-    status: 'Ativo',
-    iban: 'PT50 0000 0000 0000 0000 0000 4',
-  },
-];
-
-const vehicles = [
-  {
-    id: 1,
-    plate: 'AA-00-AA',
-    brand: 'Toyota',
-    model: 'Prius',
-    year: 2022,
-    owner: 'Rui Alexandre Santos',
-    driver: 'Diogo Nunes Ferreira',
-    status: 'Em operação',
-    km: '184320',
-    inspection: 'Válida',
-    insurance: 'Válido',
-    license: 32,
-    imageId: 'toyota-prius',
-  },
-  {
-    id: 2,
-    plate: 'BB-11-BB',
-    brand: 'Toyota',
-    model: 'Corolla',
-    year: 2023,
-    owner: 'Catarina Marques',
-    driver: 'Pedro Costa',
-    status: 'Em operação',
-    km: '126450',
-    inspection: 'Válida',
-    insurance: 'Válido',
-    license: 87,
-    imageId: 'toyota-corolla',
-  },
-  {
-    id: 3,
-    plate: 'CC-22-CC',
-    brand: 'Renault',
-    model: 'Clio',
-    year: 2021,
-    owner: 'Diogo Nunes Ferreira',
-    driver: 'João Pereira',
-    status: 'Manutenção',
-    km: '203120',
-    inspection: 'Válida',
-    insurance: 'Válido',
-    license: 14,
-    imageId: 'renault-clio',
-  },
-];
-
-const payments = [
-  {
-    id: 'PAY-2026-091',
-    owner: 'Rui Alexandre Santos',
-    period: '14/09 — 20/09',
-    gross: 620,
-    commission: 25,
-    net: 595,
-    status: 'Pago',
-  },
-  {
-    id: 'PAY-2026-092',
-    owner: 'Catarina Marques',
-    period: '14/09 — 20/09',
-    gross: 710,
-    commission: 25,
-    net: 685,
-    status: 'A validar',
-  },
-  {
-    id: 'PAY-2026-093',
-    owner: 'Diogo Nunes Ferreira',
-    period: '14/09 — 20/09',
-    gross: 540,
-    commission: 25,
-    net: 515,
-    status: 'Pendente',
-  },
-];
-
-const initialDrivers = [
-  ['Diogo Nunes Ferreira', 'AA-00-AA', 'Ativo'],
-  ['Pedro Costa', 'BB-11-BB', 'Ativo'],
-  ['João Pereira', 'CC-22-CC', 'Pendente'],
-  ['Miguel Santos', 'DD-33-DD', 'Ativo'],
-].map(([name, vehicle, status], i) => ({ id: i + 1, name, vehicle, status, phone: '+351 91X XXX XXX', license: '' }));
-
-const initialContracts = [
-  { id: 'CTR-2026-001', owner: 'Rui Alexandre Santos', vehicle: 'AA-00-AA', start: '2026-06-01', end: '2027-05-31', contractType: 'Gestão de viatura', frequency: 'Semanal', commission: 25, status: 'Ativo' },
-  { id: 'CTR-2026-002', owner: 'Catarina Marques', vehicle: 'BB-11-BB', start: '2026-07-12', end: '2027-07-11', contractType: 'Gestão de viatura', frequency: 'Semanal', commission: 25, status: 'Ativo' },
-];
-
-const initialDocuments = [
-  ['Contrato CTR-2026-001', 'Rui Alexandre Santos', 'Contrato', 'Ativo'],
-  ['Seguro AA-00-AA', 'Rui Alexandre Santos', 'Seguro', 'Válido'],
-  ['Licença TVDE CC-22-CC', 'Diogo Nunes Ferreira', 'Licença TVDE', 'Expira em 14 dias'],
-  ['Fatura FT 2026/000124', 'Rui Alexandre Santos', 'Outro', 'Emitida'],
-].map(([name, entity, type, status], i) => ({ id: i + 1, name, entity, type, status }));
-
-const initialLeads = [
-  'Miguel Fernandes',
-  'Rui Almeida',
-  'Sandra Lopes',
-  'Paulo Costa',
-  'Joana Silva',
-].map((name, i) => ({ id: i + 1, name, status: ['Novo', 'Novo', 'Em contacto', 'Documentação', 'Convertido'][i], contactType: 'Proprietário', city: 'Lisboa' }));
-
-const initialRetakes = owners.slice(0, 3).map((o, i) => ({
-  id: 'RET-00' + (i + 1),
-  owner: o.name,
-  plate: vehicles[i].plate,
-  status: ['Avaliação', 'Agendada', 'Nova'][i],
-  date: '2026-09-21',
-}));
-
-const initialInvoices = owners.slice(0, 3).map((o, i) => ({
-  id: i + 1,
-  number: 'FT 2026/000' + (124 - i),
-  customer: o.name,
-  customerNif: o.nif,
-  customerAddress: 'Lisboa',
-  date: i ? '2026-09-20' : '2026-09-21',
-  items: [{ description: 'Gestão de viatura TVDE', quantity: 1, unitPrice: 25, vatRate: 23 }],
-  subtotal: 25,
-  vat: 5.75,
-  total: 30.75,
-  status: ['Pendente', 'Paga', 'Pendente'][i],
-}));
+import { money, round, today, formatDate } from "./lib/format.js";
+import { StatusBadge } from "./components/StatusBadge.jsx";
+import { owners, vehicles, payments, initialDrivers, initialContracts, initialDocuments, initialLeads, initialRetakes, initialInvoices } from "./data/demo.js";
 
 /* =========================================================
    NAVEGAÇÃO E METADADOS
@@ -221,11 +50,6 @@ const entityMeta = {
    UTILITÁRIOS
 ========================================================= */
 
-const moneyFormat = new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' });
-const money = value => moneyFormat.format(Number(value) || 0);
-const round = value => Math.round((Number(value) || 0) * 100) / 100;
-const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
-const formatDate = iso => { if (!iso) return ''; const [y, m, d] = String(iso).split('-'); return d ? `${d}/${m}/${y}` : String(iso); };
 const invoiceTotals = (items = []) => {
   const subtotal = items.reduce((s, item) => s + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0), 0);
   const vat = items.reduce((s, item) => s + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0) * (Number(item.vatRate) || 0) / 100, 0);
@@ -241,7 +65,6 @@ const printGeneratedDocument = () => {
   window.addEventListener('afterprint', clear);
   window.print();
 };
-function StatusBadge({ type = 'default', children }) { return <span className={`status-badge ${type}`}>{children}</span>; }
 
 const f = (key,label,type='text',required=false,options=null) => ({key,label,type,required,options});
 function fieldsFor(kind, db) {
@@ -1073,7 +896,7 @@ function PageHeader({ title, description, button, onClick }) {
    APP
 ========================================================= */
 
-export default function App() {
+export default function App({ onLogout }) {
   const [activePage, setActivePage] = useState("dashboard");
   const [mobileMenu, setMobileMenu] = useState(false);
   const [navSearch,setNavSearch]=useState('');
@@ -1242,7 +1065,7 @@ export default function App() {
           </button>
         </nav>
 
-        <div className="sidebar-user"><ProfileMenu profile={profile} placement="up" onEdit={()=>openModal('profile-edit')} onTeam={()=>{setActivePage('team');setMobileMenu(false);}} onTemplates={()=>{setActivePage('email-templates');setMobileMenu(false);}}/></div>
+        <div className="sidebar-user"><ProfileMenu profile={profile} onLogout={onLogout} placement="up" onEdit={()=>openModal('profile-edit')} onTeam={()=>{setActivePage('team');setMobileMenu(false);}} onTemplates={()=>{setActivePage('email-templates');setMobileMenu(false);}}/></div>
       </aside>
 
       {mobileMenu && (
@@ -1273,7 +1096,7 @@ export default function App() {
               <span />
             </button>
 
-            <ProfileMenu profile={profile} compact onEdit={()=>openModal('profile-edit')} onTeam={()=>setActivePage('team')} onTemplates={()=>setActivePage('email-templates')}/>
+            <ProfileMenu profile={profile} onLogout={onLogout} compact onEdit={()=>openModal('profile-edit')} onTeam={()=>setActivePage('team')} onTemplates={()=>setActivePage('email-templates')}/>
           </div>
         </header>
 

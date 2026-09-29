@@ -6,7 +6,8 @@ const THEMES = ['light', 'dark', 'system'];
 export function useTheme() {
   const [theme, setThemeState] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem(THEME_KEY) || 'system';
+      // O painel do utilizador arranca em escuro (uso nocturno ao volante), conforme o DESIGN.md.
+      return localStorage.getItem(THEME_KEY) || 'dark';
     }
     return 'system';
   });

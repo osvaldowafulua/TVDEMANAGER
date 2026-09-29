@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from './AuthContext';
+import { useAuth, homeFor, destinationFor } from './AuthContext';
 
 export function ProtectedRoute({ children, allowedRoles }) {
   const { isAuthenticated, isLoading, role } = useAuth();
@@ -19,14 +19,15 @@ export function ProtectedRoute({ children, allowedRoles }) {
   }
 
   if (allowedRoles && !allowedRoles.includes(role)) {
-    return <Navigate to="/user/vehicles" replace />;
+    return <Navigate to={homeFor(role)} replace />;
   }
 
   return children;
 }
 
 export function GuestRoute({ children }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, role } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -37,7 +38,7 @@ export function GuestRoute({ children }) {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/user/vehicles" replace />;
+    return <Navigate to={destinationFor(role, location.state?.from?.pathname)} replace />;
   }
 
   return children;

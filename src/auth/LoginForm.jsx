@@ -1,18 +1,33 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, LockKey, Eye, EyeClosed, Mail } from '@phosphor-icons/react';
-import { useAuth } from './AuthContext';
+import { Car, User, UserGear, SteeringWheel, LockKey, Eye, EyeClosed, EnvelopeSimple } from '@phosphor-icons/react';
+import { useAuth, destinationFor, DEMO_USERS } from './AuthContext';
+
+const ROLES = [
+  { value: 'admin', label: 'Gestor de frota', description: 'Operação completa: viaturas, motoristas, pagamentos, facturação', icon: UserGear },
+  { value: 'owner', label: 'Proprietário', description: 'As suas viaturas, pagamentos, contratos e documentos', icon: User },
+  { value: 'driver', label: 'Motorista', description: 'Viatura atribuída, licença TVDE e documentos', icon: SteeringWheel },
+];
+
+const demoEmailFor = role => Object.keys(DEMO_USERS).find(email => DEMO_USERS[email].role === role);
 
 export function LoginForm() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
-  const from = location.state?.from?.pathname || '/user/vehicles';
+  const from = location.state?.from?.pathname;
 
-  const [form, setForm] = useState({ email: '', role: 'owner', password: '' });
+  const [form, setForm] = useState({ email: demoEmailFor('admin'), role: 'admin', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const chooseRole = role => setForm(v => ({
+    ...v,
+    role,
+    // Troca o email apenas se ainda estiver vazio ou com outra conta de demonstração.
+    email: !v.email || DEMO_USERS[v.email] ? demoEmailFor(role) : v.email,
+  }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,10 +36,9 @@ export function LoginForm() {
 
     try {
       await login(form.email, form.role);
-      navigate(from, { replace: true });
+      navigate(destinationFor(form.role, from), { replace: true });
     } catch (err) {
       setError(err.message);
-    } finally {
       setLoading(false);
     }
   };
@@ -34,54 +48,75 @@ export function LoginForm() {
       <main className="login-container">
         <div className="login-brand">
           <div className="login-brand-mark">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
+            <Car size={26} aria-hidden="true" />
           </div>
-          <h1>TVDE Fleet</h1>
-          <p>Painel do Utilizador</p>
+          <div>
+            <h1>TVDE Fleet</h1>
+            <p>Gestão de frota TVDE · Portugal</p>
+          </div>
         </div>
 
         <form className="login-form" onSubmit={handleSubmit} noValidate>
+          <h2>Entrar</h2>
+
           {error && <div className="login-error" role="alert">{error}</div>}
 
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
+          <fieldset className="role-fieldset">
+            <legend>Tipo de utilizador</legend>
+            <div className="role-options">
+              {ROLES.map(({ value, label, description, icon: Icon }) => (
+                <label key={value} className={`role-option ${form.role === value ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="role"
+                    value={value}
+                    checked={form.role === value}
+                    onChange={() => chooseRole(value)}
+                    disabled={loading}
+                  />
+                  <Icon size={22} aria-hidden="true" />
+                  <span>
+                    <strong>{label}</strong>
+                    <small>{description}</small>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <div className="login-field">
+            <label htmlFor="login-email">Email</label>
             <div className="input-with-icon">
-              <Mail size={18} aria-hidden="true" />
+              <EnvelopeSimple size={18} aria-hidden="true" />
               <input
-                id="email"
+                id="login-email"
                 type="email"
                 className="form-input"
-                placeholder="owner@demo.pt ou driver@demo.pt"
                 value={form.email}
                 onChange={e => setForm(v => ({ ...v, email: e.target.value }))}
-                required
                 autoComplete="email"
                 disabled={loading}
               />
             </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
+          <div className="login-field">
+            <label htmlFor="login-password">Password</label>
             <div className="input-with-icon">
               <LockKey size={18} aria-hidden="true" />
               <input
-                id="password"
+                id="login-password"
                 type={showPassword ? 'text' : 'password'}
                 className="form-input"
-                placeholder="Qualquer password (demo)"
+                placeholder="Qualquer password (demonstração)"
                 value={form.password}
                 onChange={e => setForm(v => ({ ...v, password: e.target.value }))}
-                required
                 autoComplete="current-password"
                 disabled={loading}
               />
               <button
                 type="button"
-                className="icon-button password-toggle"
+                className="password-toggle"
                 onClick={() => setShowPassword(v => !v)}
                 aria-label={showPassword ? 'Ocultar password' : 'Mostrar password'}
                 aria-pressed={showPassword}
@@ -92,54 +127,14 @@ export function LoginForm() {
             </div>
           </div>
 
-          <fieldset className="form-group role-fieldset">
-            <legend>Tipo de utilizador</legend>
-            <div className="role-options">
-              <label className={`role-option ${form.role === 'owner' ? 'selected' : ''}`}>
-                <input
-                  type="radio"
-                  name="role"
-                  value="owner"
-                  checked={form.role === 'owner'}
-                  onChange={e => setForm(v => ({ ...v, role: e.target.value }))}
-                  disabled={loading}
-                />
-                <span className="role-option-content">
-                  <User size={20} aria-hidden="true" />
-                  <div>
-                    <strong>Proprietário</strong>
-                    <small>Viaturas, pagamentos, contratos, documentos</small>
-                  </div>
-                </span>
-              </label>
-              <label className={`role-option ${form.role === 'driver' ? 'selected' : ''}`}>
-                <input
-                  type="radio"
-                  name="role"
-                  value="driver"
-                  checked={form.role === 'driver'}
-                  onChange={e => setForm(v => ({ ...v, role: e.target.value }))}
-                  disabled={loading}
-                />
-                <span className="role-option-content">
-                  <User size={20} aria-hidden="true" />
-                  <div>
-                    <strong>Motorista</strong>
-                    <small>Viatura atribuída, licença TVDE, documentos</small>
-                  </div>
-                </span>
-              </label>
-            </div>
-          </fieldset>
-
-          <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
-            {loading ? 'A entrar...' : 'Entrar'}
+          <button type="submit" className="btn btn-primary btn-block login-submit" disabled={loading}>
+            {loading ? 'A entrar…' : 'Entrar'}
           </button>
         </form>
 
-        <div className="login-demo-hint">
-          <p><strong>Demo:</strong> Use <code>owner@demo.pt</code> ou <code>driver@demo.pt</code> com qualquer password.</p>
-        </div>
+        <p className="login-demo-hint">
+          Sessão de demonstração: os dados são fictícios e ficam apenas neste browser. Contas: <code>admin@demo.pt</code>, <code>owner@demo.pt</code> e <code>driver@demo.pt</code>, com qualquer password.
+        </p>
       </main>
     </div>
   );

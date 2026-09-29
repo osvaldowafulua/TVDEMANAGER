@@ -1,100 +1,80 @@
-import { Moon, Sun, Monitor, Bell, LogOut, User, X } from '@phosphor-icons/react';
+import { useEffect, useRef, useState } from 'react';
+import { Car, Moon, Sun, Monitor, SignOut, User, CaretDown } from '@phosphor-icons/react';
 
-export function UserTopbar({
-  user,
-  role,
-  theme,
-  onToggleTheme,
-  onMenuToggle,
-  onLogout,
-  mobileMenuOpen,
-}) {
-  const themeIcons = {
-    light: <Sun size={20} />,
-    dark: <Moon size={20} />,
-    system: <Monitor size={20} />,
-  };
+const THEME_ICONS = { light: Sun, dark: Moon, system: Monitor };
+const THEME_LABELS = { light: 'Claro', dark: 'Escuro', system: 'Sistema' };
+const ROLE_LABELS = { owner: 'Proprietário', driver: 'Motorista' };
 
-  const themeLabels = {
-    light: 'Claro',
-    dark: 'Escuro',
-    system: 'Sistema',
-  };
+export function UserTopbar({ user, role, theme, onToggleTheme, onProfile, onLogout }) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef(null);
 
-  const initials = user?.name
-    ?.split(' ')
-    .map(n => n[0])
-    .slice(0, 2)
-    .join('') || '?';
+  useEffect(() => {
+    if (!open) return;
+    const closeOutside = event => { if (!menuRef.current?.contains(event.target)) setOpen(false); };
+    const closeEscape = event => { if (event.key === 'Escape') { setOpen(false); menuRef.current?.querySelector('.user-avatar-btn')?.focus(); } };
+    document.addEventListener('pointerdown', closeOutside);
+    document.addEventListener('keydown', closeEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside);
+      document.removeEventListener('keydown', closeEscape);
+    };
+  }, [open]);
 
-  const roleLabels = {
-    owner: 'Proprietário',
-    driver: 'Motorista',
-  };
+  const initials = user?.name?.split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('') || '?';
+  const ThemeIcon = THEME_ICONS[theme] || Monitor;
+  const choose = callback => { setOpen(false); callback(); };
 
   return (
     <div className="user-topbar-inner">
-      <div className="topbar-start">
-        <button
-          className="mobile-menu-btn"
-          onClick={onMenuToggle}
-          aria-expanded={mobileMenuOpen}
-          aria-label={mobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
-          aria-controls="user-sidebar"
-        >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-
-        <div className="topbar-brand">
-          <div className="brand-mark">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
-          </div>
-          <div className="brand-text">
-            <strong>TVDE Fleet</strong>
-            <span>Painel do Utilizador</span>
-          </div>
+      <div className="user-brand">
+        <div className="brand-mark"><Car size={20} aria-hidden="true" /></div>
+        <div className="user-brand-text">
+          <strong>TVDE Fleet</strong>
+          <span>Painel do {ROLE_LABELS[role]?.toLowerCase() || 'utilizador'}</span>
         </div>
       </div>
 
-      <div className="topbar-end">
+      <div className="user-topbar-end">
+        <span className="user-demo-pill">Demonstração</span>
+
         <button
-          className="icon-button theme-toggle"
+          type="button"
+          className="user-icon-btn"
           onClick={onToggleTheme}
-          aria-label={`Tema atual: ${themeLabels[theme]}. Clique para alterar.`}
-          title={`Tema: ${themeLabels[theme]}`}
+          aria-label={`Tema: ${THEME_LABELS[theme]}. Alterar tema`}
+          title={`Tema: ${THEME_LABELS[theme]}`}
         >
-          {themeIcons[theme]}
+          <ThemeIcon size={20} aria-hidden="true" />
         </button>
 
-        <button className="icon-button notification-btn" aria-label="Notificações">
-          <Bell size={20} />
-          <span className="notification-badge" aria-hidden="true">3</span>
-        </button>
-
-        <div className="user-menu">
+        <div className="user-menu" ref={menuRef}>
           <button
+            type="button"
             className="user-avatar-btn"
             aria-haspopup="menu"
-            aria-expanded="false"
+            aria-expanded={open}
             aria-label={`Menu do utilizador: ${user?.name}`}
+            onClick={() => setOpen(v => !v)}
           >
-            <span className="avatar">{initials}</span>
+            <span className="user-avatar">{initials}</span>
+            <CaretDown size={14} aria-hidden="true" />
           </button>
 
-          <div className="user-dropdown" role="menu" aria-label="Opções do utilizador">
-            <div className="dropdown-header">
-              <strong>{user?.name}</strong>
-              <small>{roleLabels[role]}</small>
+          {open && (
+            <div className="user-dropdown" role="menu" aria-label="Opções do utilizador">
+              <div className="user-dropdown-head">
+                <strong>{user?.name}</strong>
+                <small>{ROLE_LABELS[role]} · {user?.email}</small>
+              </div>
+              <button type="button" role="menuitem" onClick={() => choose(onProfile)}>
+                <User size={16} aria-hidden="true" /> O meu perfil
+              </button>
+              <button type="button" role="menuitem" onClick={() => choose(onLogout)}>
+                <SignOut size={16} aria-hidden="true" /> Terminar sessão
+              </button>
             </div>
-            <div className="dropdown-divider" />
-            <button role="menuitem" className="dropdown-item" onClick={onLogout}>
-              <LogOut size={16} aria-hidden="true" />
-              Sair
-            </button>
-          </div>
+          )}
         </div>
       </div>
     </div>
