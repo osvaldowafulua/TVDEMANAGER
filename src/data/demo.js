@@ -114,7 +114,7 @@ export const payments = [
     gross: 710,
     commission: 25,
     net: 685,
-    status: 'A validar',
+    status: 'Em validação',
   },
   {
     id: 'PAY-2026-093',

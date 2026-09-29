@@ -2731,6 +2731,10 @@ td small {
     line-height: 1.65;
   }
 
+}
+
+/* Conteúdo do papel dos contratos e documentos: igual no ecrã e na impressão (Exportar PDF). */
+@media screen, print {
   .document-preview-sheet h1,
   .document-preview-sheet h2,
   .document-preview-sheet h3 {
@@ -2813,6 +2817,9 @@ td small {
     line-height: 1.6;
   }
 
+}
+
+@media screen {
   .document-preview-empty {
     display: grid;
     place-items: center;
@@ -3021,3 +3028,10 @@ body[data-print-target="document"] .document-preview-signatures {
 .email-settings-status.error { color: #f6a1aa; background: #361f28; border-color: #63313d; }
 .email-settings-note { margin-top: 16px; font-size: 12px; line-height: 1.6; }
 .email-settings-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+
+/* O toast não bloqueia cliques nos botões por baixo; com um modal aberto (desktop) passa para a esquerda, longe do rodapé do modal. */
+.toast { pointer-events: none; }
+.toast > button { pointer-events: auto; }
+@media (min-width: 769px) {
+  body:has(.modal-overlay) .toast { left: 24px; right: auto; }
+}
